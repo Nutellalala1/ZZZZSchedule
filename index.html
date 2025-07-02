@@ -1,21 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Colorful Schedule</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Schedule Planner</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="container">
-    <h1>🎨 My Custom Schedule</h1>
-    <p id="status"></p>
-    <div class="table-wrapper">
-      <table id="schedule-table"></table>
+    <!-- Password Modal -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Schedule Access</h3>
+            </div>
+            <div class="form-group">
+                <label>Enter Password (leave blank for view-only)</label>
+                <input type="password" id="passwordInput" placeholder="Password" />
+                <div class="password-warning" id="passwordWarning">Incorrect password</div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn" id="submitPassword">Continue</button>
+            </div>
+        </div>
     </div>
-    <button id="save-btn">💾 Save Schedule</button>
-  </div>
-  <input type="color" id="color-picker" style="display:none;" />
-  <script src="script.js"></script>
+
+    <!-- Main App (hidden until password verified) -->
+    <div class="container" id="app" style="display: none;">
+        <div class="header">
+            <h1>My Secure Schedule</h1>
+            <p>Organize your week with protection</p>
+            <button class="mode-toggle" id="modeToggle">Switch to View Mode</button>
+        </div>
+
+        <div class="controls" id="controls">
+            <div class="control-group">
+                <input type="text" id="eventTitle" placeholder="Event title" />
+                <input type="date" id="eventDate" />
+                <input type="time" id="eventStartTime" />
+                <input type="time" id="eventEndTime" />
+                <input type="color" id="eventColor" value="#3498db" title="Event Color" />
+                <button class="btn" id="addEvent">Add Event</button>
+            </div>
+            
+            <div class="control-group">
+                <input type="text" id="ownerName" placeholder="Your name" />
+                <button class="btn" id="clearAll">Clear All Events</button>
+                <button class="btn" id="exportData">Export Schedule</button>
+                <input type="file" id="importData" accept=".json" style="display: none;" />
+                <button class="btn" id="importBtn">Import Schedule</button>
+                <button class="btn btn-secondary" id="changePassword">Change Password</button>
+            </div>
+
+            <div class="share-section">
+                <h4>Sharing Instructions</h4>
+                <p>1. Export your schedule using the "Export Schedule" button</p>
+                <p>2. Upload the exported JSON file to your web server</p>
+                <p>3. Share the URL with friends: <code>https://yoursite.com/?data=schedule.json</code></p>
+                <p><strong>Note:</strong> Friends will only see view-only version without password</p>
+            </div>
+        </div>
+
+        <div class="schedule-grid">
+            <div class="week-header">
+                <div class="time-label">Time</div>
+                <div class="day-header">Monday</div>
+                <div class="day-header">Tuesday</div>
+                <div class="day-header">Wednesday</div>
+                <div class="day-header">Thursday</div>
+                <div class="day-header">Friday</div>
+                <div class="day-header">Saturday</div>
+                <div class="day-header">Sunday</div>
+            </div>
+            <div id="scheduleRows"></div>
+        </div>
+    </div>
+
+    <!-- Event Modal -->
+    <div id="eventModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Event</h3>
+            </div>
+            <div class="form-group">
+                <label>Event Title</label>
+                <input type="text" id="modalEventTitle" />
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="modalEventDescription" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="modalEventDate" />
+            </div>
+            <div class="form-group">
+                <label>Start Time</label>
+                <input type="time" id="modalEventStartTime" />
+            </div>
+            <div class="form-group">
+                <label>End Time</label>
+                <input type="time" id="modalEventEndTime" />
+            </div>
+            <div class="form-group">
+                <label>Event Color</label>
+                <input type="color" id="modalEventColor" />
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" id="cancelEdit">Cancel</button>
+                <button class="btn btn-danger" id="deleteEvent">Delete</button>
+                <button class="btn" id="saveEvent">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Change Modal -->
+    <div id="passwordChangeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Change Password</h3>
+            </div>
+            <div class="form-group">
+                <label>Current Password</label>
+                <input type="password" id="currentPassword" placeholder="Current password" />
+            </div>
+            <div class="form-group">
+                <label>New Password</label>
+                <input type="password" id="newPassword" placeholder="New password" />
+            </div>
+            <div class="form-group">
+                <label>Confirm New Password</label>
+                <input type="password" id="confirmNewPassword" placeholder="Confirm new password" />
+                <div class="password-warning" id="passwordChangeWarning"></div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" id="cancelPasswordChange">Cancel</button>
+                <button class="btn" id="saveNewPassword">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
