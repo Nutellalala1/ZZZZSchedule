@@ -619,6 +619,3 @@ class SecureSchedulePlanner {
 document.addEventListener('DOMContentLoaded', () => {
     new SecureSchedulePlanner();
 });
-window.addEventListener('DOMContentLoaded', () => {
-    new SecureSchedulePlanner();
-});
