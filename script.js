@@ -186,39 +186,60 @@ class SecureSchedulePlanner {
     }
 
     addEvent() {
-        if (!this.hasPasswordAccess) return;
-        
-        const title = document.getElementById('eventTitle').value;
-        const date = document.getElementById('eventDate').value;
-        const startTime = document.getElementById('eventStartTime').value;
-        const endTime = document.getElementById('eventEndTime').value;
-        const color = document.getElementById('eventColor').value;
-        
-        if (!title || !date || !startTime || !endTime) {
-            alert('Please fill in all fields');
-            return;
-        }
-        
-        if (startTime >= endTime) {
-            alert('End time must be after start time');
-            return;
-        }
-        
-        const event = {
-            id: Date.now().toString(),
-            title,
-            date,
-            startTime,
-            endTime,
-            color,
-            description: ''
-        };
-        
-        this.events.push(event);
-        this.renderEvents();
-        this.saveToStorage();
-        this.clearForm();
+    if (!this.hasPasswordAccess) return;
+    
+    const title = document.getElementById('eventTitle').value;
+    const dateInput = document.getElementById('eventDate');
+    const date = dateInput.value;
+    const startTime = document.getElementById('eventStartTime').value;
+    const endTime = document.getElementById('eventEndTime').value;
+    const color = document.getElementById('eventColor').value;
+    
+    // Debugging: Log the values to console
+    console.log('Form values:', {
+        title,
+        date,
+        startTime,
+        endTime,
+        color
+    });
+    
+    if (!title || !date || !startTime || !endTime) {
+        alert('Please fill in all fields');
+        // Highlight empty fields
+        if (!title) document.getElementById('eventTitle').style.borderColor = 'red';
+        if (!date) dateInput.style.borderColor = 'red';
+        if (!startTime) document.getElementById('eventStartTime').style.borderColor = 'red';
+        if (!endTime) document.getElementById('eventEndTime').style.borderColor = 'red';
+        return;
     }
+    
+    if (startTime >= endTime) {
+        alert('End time must be after start time');
+        return;
+    }
+    
+    const event = {
+        id: Date.now().toString(),
+        title,
+        date,
+        startTime,
+        endTime,
+        color,
+        description: ''
+    };
+    
+    this.events.push(event);
+    this.renderEvents();
+    this.saveToStorage();
+    this.clearForm();
+    
+    // Reset border colors
+    document.getElementById('eventTitle').style.borderColor = '';
+    dateInput.style.borderColor = '';
+    document.getElementById('eventStartTime').style.borderColor = '';
+    document.getElementById('eventEndTime').style.borderColor = '';
+}
 
     handleTimeSlotClick(slot) {
     if (!this.hasPasswordAccess) return;
@@ -233,11 +254,18 @@ class SecureSchedulePlanner {
     const daysToAdd = week === 'current' ? dayInWeek : dayInWeek + 7;
     targetDate.setDate(today.getDate() + daysToAdd);
     
-    document.getElementById('eventDate').value = targetDate.toISOString().split('T')[0];
+    // Format the date as YYYY-MM-DD
+    const year = targetDate.getFullYear();
+    const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+    const day = String(targetDate.getDate()).padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`;
+    
+    document.getElementById('eventDate').value = formattedDate;
     document.getElementById('eventStartTime').value = `${hour.toString().padStart(2, '0')}:00`;
     document.getElementById('eventEndTime').value = `${(hour + 1).toString().padStart(2, '0')}:00`;
     document.getElementById('eventTitle').focus();
 }
+
 
     editEvent(eventId) {
         if (!this.hasPasswordAccess) return;
