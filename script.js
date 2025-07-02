@@ -1,16 +1,20 @@
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-const timeSlots = ["8AM", "10AM", "12PM", "2PM", "4PM", "6PM"];
+const timeSlots = Array.from({length: 17}, (_, i) => {
+  const hour = 6 + i;
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const label = ((hour - 1) % 12 + 1) + suffix;
+  return label;
+});
+
 const table = document.getElementById("schedule-table");
 const saveBtn = document.getElementById("save-btn");
 const statusText = document.getElementById("status");
 
-// Replace with YOUR GitHub username and repo
-const RAW_JSON_URL = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/schedule.json";
+const RAW_JSON_URL = "https://raw.githubusercontent.com/Nutellalala1/ZZZZSchedule/master/schedule.json";
 
 let isOwner = false;
 let schedule = {};
 
-// Ask if you're the owner (simple key method)
 const key = prompt("Enter secret key (leave blank to view only):");
 if (key === "mySecret123") {
   isOwner = true;
@@ -33,8 +37,20 @@ function createTable(data) {
     row.insertCell().outerHTML = `<th>${time}</th>`;
     for (const day of days) {
       const cell = row.insertCell();
-      cell.textContent = data[day]?.[time] || "";
-      if (isOwner) cell.contentEditable = "true";
+      const entry = data[day]?.[time] || "";
+      const content = typeof entry === "string" ? entry : entry?.text || "";
+      const color = typeof entry === "object" ? entry.color : "";
+
+      cell.textContent = content;
+      if (color) cell.style.backgroundColor = color;
+      if (isOwner) {
+        cell.contentEditable = "true";
+        cell.classList.add("editable");
+        cell.addEventListener("dblclick", () => {
+          const newColor = prompt("Enter background color (e.g., lightblue, #f4a, etc):");
+          if (newColor) cell.style.backgroundColor = newColor;
+        });
+      }
     }
   }
 }
@@ -47,7 +63,12 @@ function extractTableData() {
     for (let j = 1; j < row.cells.length; j++) {
       const day = days[j - 1];
       if (!data[day]) data[day] = {};
-      data[day][time] = row.cells[j].textContent.trim();
+      const cell = row.cells[j];
+      const text = cell.textContent.trim();
+      const color = cell.style.backgroundColor || "";
+      if (text || color) {
+        data[day][time] = { text, color };
+      }
     }
   }
   return data;
@@ -67,14 +88,16 @@ saveBtn.addEventListener("click", () => {
   alert("Download complete! Replace your GitHub `schedule.json` to update.");
 });
 
-// Load schedule
 fetch(RAW_JSON_URL)
-  .then(res => res.json())
+  .then(res => {
+    if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+    return res.json();
+  })
   .then(data => {
     schedule = data;
     createTable(schedule);
   })
   .catch(err => {
-    console.error(err);
-    alert("Failed to load schedule.json");
+    console.error("Fetch error:", err);
+    alert("Failed to load schedule.json — check the URL or GitHub file path.");
   });
