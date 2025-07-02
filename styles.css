@@ -126,32 +126,6 @@ body {
     background: #5a6268;
 }
 
-.share-section {
-    background: #f0f0f0;
-    padding: 20px;
-    border-radius: 5px;
-    margin-top: 20px;
-    border: 1px solid #ddd;
-}
-
-.share-section h4 {
-    margin-bottom: 15px;
-    color: #333;
-}
-
-.share-section p {
-    margin-bottom: 10px;
-    color: #666;
-}
-
-.share-section code {
-    background: #f8f9fa;
-    padding: 2px 4px;
-    border-radius: 3px;
-    font-family: 'Courier New', monospace;
-    color: #333;
-}
-
 .schedule-grid {
     padding: 20px;
 }
