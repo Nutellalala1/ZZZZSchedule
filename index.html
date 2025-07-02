@@ -53,20 +53,39 @@
 
         </div>
 
-        <div class="schedule-grid">
-            <div class="week-header">
-                <div class="time-label">Time</div>
-                <div class="day-header">Monday</div>
-                <div class="day-header">Tuesday</div>
-                <div class="day-header">Wednesday</div>
-                <div class="day-header">Thursday</div>
-                <div class="day-header">Friday</div>
-                <div class="day-header">Saturday</div>
-                <div class="day-header">Sunday</div>
-            </div>
-            <div id="scheduleRows"></div>
+        <div class="schedule-container">
+    <!-- This Week -->
+    <div class="week-grid">
+        <h3 class="week-title">This Week</h3>
+        <div class="week-header">
+            <div class="time-label">Time</div>
+            <div class="day-header">Monday</div>
+            <div class="day-header">Tuesday</div>
+            <div class="day-header">Wednesday</div>
+            <div class="day-header">Thursday</div>
+            <div class="day-header">Friday</div>
+            <div class="day-header">Saturday</div>
+            <div class="day-header">Sunday</div>
         </div>
+        <div id="currentWeekRows"></div>
     </div>
+
+    <!-- Next Week -->
+    <div class="week-grid">
+        <h3 class="week-title">Next Week</h3>
+        <div class="week-header">
+            <div class="time-label">Time</div>
+            <div class="day-header">Monday</div>
+            <div class="day-header">Tuesday</div>
+            <div class="day-header">Wednesday</div>
+            <div class="day-header">Thursday</div>
+            <div class="day-header">Friday</div>
+            <div class="day-header">Saturday</div>
+            <div class="day-header">Sunday</div>
+        </div>
+        <div id="nextWeekRows"></div>
+    </div>
+</div>
 
     <!-- Event Modal -->
     <div id="eventModal" class="modal">

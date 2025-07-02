@@ -67,30 +67,48 @@ class SecureSchedulePlanner {
     }
 
     generateTimeSlots() {
-        const container = document.getElementById('scheduleRows');
-        container.innerHTML = '';
+    const currentWeekContainer = document.getElementById('currentWeekRows');
+    const nextWeekContainer = document.getElementById('nextWeekRows');
+    currentWeekContainer.innerHTML = '';
+    nextWeekContainer.innerHTML = '';
+    
+    // Generate from 6 AM to 11 PM (12-hour format)
+    for (let hour = 6; hour < 24; hour++) {
+        // Current week row
+        const currentWeekRow = document.createElement('div');
+        currentWeekRow.className = 'schedule-row';
         
-        // Generate from 6 AM to 11 PM (12-hour format)
-        for (let hour = 6; hour < 24; hour++) {
-            const row = document.createElement('div');
-            row.className = 'schedule-row';
+        const timeLabel = document.createElement('div');
+        timeLabel.className = 'time-label';
+        timeLabel.textContent = this.formatTime12Hour(hour);
+        currentWeekRow.appendChild(timeLabel);
+        
+        // Next week row
+        const nextWeekRow = document.createElement('div');
+        nextWeekRow.className = 'schedule-row';
+        nextWeekRow.appendChild(timeLabel.cloneNode(true));
+        
+        // Generate slots for current week (days 0-6)
+        for (let day = 0; day < 7; day++) {
+            const currentSlot = document.createElement('div');
+            currentSlot.className = 'time-slot';
+            currentSlot.dataset.day = day;
+            currentSlot.dataset.hour = hour;
+            currentSlot.dataset.week = 'current';
+            currentWeekRow.appendChild(currentSlot);
             
-            const timeLabel = document.createElement('div');
-            timeLabel.className = 'time-label';
-            timeLabel.textContent = this.formatTime12Hour(hour);
-            row.appendChild(timeLabel);
-            
-            for (let day = 0; day < 7; day++) {
-                const slot = document.createElement('div');
-                slot.className = 'time-slot';
-                slot.dataset.day = day;
-                slot.dataset.hour = hour;
-                row.appendChild(slot);
-            }
-            
-            container.appendChild(row);
+            const nextSlot = document.createElement('div');
+            nextSlot.className = 'time-slot';
+            nextSlot.dataset.day = day + 7; // Next week days are 7-13
+            nextSlot.dataset.hour = hour;
+            nextSlot.dataset.week = 'next';
+            nextWeekRow.appendChild(nextSlot);
         }
+        
+        currentWeekContainer.appendChild(currentWeekRow);
+        nextWeekContainer.appendChild(nextWeekRow);
     }
+}
 
     bindEvents() {
         document.getElementById('addEvent').addEventListener('click', () => this.addEvent());
@@ -203,21 +221,23 @@ class SecureSchedulePlanner {
     }
 
     handleTimeSlotClick(slot) {
-        if (!this.hasPasswordAccess) return;
-        
-        const day = parseInt(slot.dataset.day);
-        const hour = parseInt(slot.dataset.hour);
-        
-        // Auto-fill the form with clicked time
-        const today = new Date();
-        const targetDate = new Date(today);
-        targetDate.setDate(today.getDate() + (day - today.getDay()));
-        
-        document.getElementById('eventDate').value = targetDate.toISOString().split('T')[0];
-        document.getElementById('eventStartTime').value = `${hour.toString().padStart(2, '0')}:00`;
-        document.getElementById('eventEndTime').value = `${(hour + 1).toString().padStart(2, '0')}:00`;
-        document.getElementById('eventTitle').focus();
-    }
+    if (!this.hasPasswordAccess) return;
+    
+    const dayInWeek = parseInt(slot.dataset.day);
+    const week = slot.dataset.week;
+    const hour = parseInt(slot.dataset.hour);
+    
+    // Calculate the date based on which week was clicked
+    const today = new Date();
+    const targetDate = new Date(today);
+    const daysToAdd = week === 'current' ? dayInWeek : dayInWeek + 7;
+    targetDate.setDate(today.getDate() + daysToAdd);
+    
+    document.getElementById('eventDate').value = targetDate.toISOString().split('T')[0];
+    document.getElementById('eventStartTime').value = `${hour.toString().padStart(2, '0')}:00`;
+    document.getElementById('eventEndTime').value = `${(hour + 1).toString().padStart(2, '0')}:00`;
+    document.getElementById('eventTitle').focus();
+}
 
     editEvent(eventId) {
         if (!this.hasPasswordAccess) return;
@@ -318,72 +338,76 @@ class SecureSchedulePlanner {
     }
 
     renderEvents() {
-        // Clear existing events and reset time slots
-        document.querySelectorAll('.event').forEach(el => el.remove());
-        document.querySelectorAll('.time-slot').forEach(slot => {
-            slot.classList.remove('has-event');
-            slot.style.backgroundColor = '';
-        });
+    // Clear existing events and reset time slots
+    document.querySelectorAll('.event').forEach(el => el.remove());
+    document.querySelectorAll('.time-slot').forEach(slot => {
+        slot.classList.remove('has-event');
+        slot.style.backgroundColor = '';
+    });
+    
+    this.events.forEach(event => {
+        const eventDate = new Date(event.date);
+        const today = new Date();
+        const daysDiff = Math.floor((eventDate - today) / (1000 * 60 * 60 * 24));
         
-        this.events.forEach(event => {
-            const eventDate = new Date(event.date);
-            const dayOfWeek = eventDate.getDay();
-            const adjustedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Convert Sunday to 6, Monday to 0
+        // Skip events that are more than 14 days in the future or in the past
+        if (daysDiff < 0 || daysDiff > 13) return;
+        
+        const startHour = parseInt(event.startTime.split(':')[0]);
+        const startMinute = parseInt(event.startTime.split(':')[1]);
+        const endHour = parseInt(event.endTime.split(':')[0]);
+        const endMinute = parseInt(event.endTime.split(':')[1]);
+        
+        // Calculate duration in hours
+        const startTotalMinutes = startHour * 60 + startMinute;
+        const endTotalMinutes = endHour * 60 + endMinute;
+        const durationMinutes = endTotalMinutes - startTotalMinutes;
+        const durationHours = durationMinutes / 60;
+        
+        // Find the starting slot
+        const weekPrefix = daysDiff < 7 ? 'current' : 'next';
+        const dayInWeek = daysDiff % 7;
+        const startSlot = document.querySelector(`[data-week="${weekPrefix}"][data-day="${dayInWeek}"][data-hour="${startHour}"]`);
+        
+        if (startSlot) {
+            const eventEl = document.createElement('div');
+            eventEl.className = 'event';
+            if (durationHours > 1) {
+                eventEl.classList.add('multi-hour');
+            }
+            eventEl.dataset.eventId = event.id;
+            eventEl.style.backgroundColor = event.color || '#3498db';
             
-            const startHour = parseInt(event.startTime.split(':')[0]);
-            const startMinute = parseInt(event.startTime.split(':')[1]);
-            const endHour = parseInt(event.endTime.split(':')[0]);
-            const endMinute = parseInt(event.endTime.split(':')[1]);
+            // Calculate height based on duration
+            const slotHeight = 60;
+            const eventHeight = Math.max(slotHeight * durationHours - 4, 56);
+            eventEl.style.height = `${eventHeight}px`;
             
-            // Calculate duration in hours
-            const startTotalMinutes = startHour * 60 + startMinute;
-            const endTotalMinutes = endHour * 60 + endMinute;
-            const durationMinutes = endTotalMinutes - startTotalMinutes;
-            const durationHours = durationMinutes / 60;
+            // Add duration display
+            const duration = this.calculateEventDuration(event.startTime, event.endTime);
             
-            // Find the starting slot
-            const startSlot = document.querySelector(`[data-day="${adjustedDay}"][data-hour="${startHour}"]`);
+            eventEl.innerHTML = `
+                <div class="event-title">${event.title}</div>
+                <div class="event-time">${this.formatTime12HourFromString(event.startTime)} - ${this.formatTime12HourFromString(event.endTime)}</div>
+                <div class="event-duration">${duration}</div>
+                ${this.hasPasswordAccess && !this.isViewMode ? `<button class="delete-event" data-event-id="${event.id}">×</button>` : ''}
+            `;
             
-            if (startSlot) {
-                const eventEl = document.createElement('div');
-                eventEl.className = 'event';
-                if (durationHours > 1) {
-                    eventEl.classList.add('multi-hour');
-                }
-                eventEl.dataset.eventId = event.id;
-                eventEl.style.backgroundColor = event.color || '#3498db';
-                
-                // Calculate height based on duration
-                const slotHeight = 60; // Base height of a time slot
-                const eventHeight = Math.max(slotHeight * durationHours - 4, 56); // Minimum height
-                eventEl.style.height = `${eventHeight}px`;
-                
-                // Add duration display
-                const duration = this.calculateEventDuration(event.startTime, event.endTime);
-                
-                eventEl.innerHTML = `
-                    <div class="event-title">${event.title}</div>
-                    <div class="event-time">${this.formatTime12HourFromString(event.startTime)} - ${this.formatTime12HourFromString(event.endTime)}</div>
-                    <div class="event-duration">${duration}</div>
-                    ${this.hasPasswordAccess && !this.isViewMode ? `<button class="delete-event" data-event-id="${event.id}">×</button>` : ''}
-                `;
-                
-                startSlot.appendChild(eventEl);
-                
-                // Mark affected time slots as having events and apply background color
-                const affectedHours = Math.ceil(durationHours);
-                for (let h = 0; h < affectedHours; h++) {
-                    const affectedSlot = document.querySelector(`[data-day="${adjustedDay}"][data-hour="${startHour + h}"]`);
-                    if (affectedSlot) {
-                        affectedSlot.classList.add('has-event');
-                        // Make the slot background match the event color with transparency
-                        const eventColor = event.color || '#3498db';
-                        affectedSlot.style.backgroundColor = this.hexToRgba(eventColor, 0.1);
-                    }
+            startSlot.appendChild(eventEl);
+            
+            // Mark affected time slots
+            const affectedHours = Math.ceil(durationHours);
+            for (let h = 0; h < affectedHours; h++) {
+                const affectedSlot = document.querySelector(`[data-week="${weekPrefix}"][data-day="${dayInWeek}"][data-hour="${startHour + h}"]`);
+                if (affectedSlot) {
+                    affectedSlot.classList.add('has-event');
+                    const eventColor = event.color || '#3498db';
+                    affectedSlot.style.backgroundColor = this.hexToRgba(eventColor, 0.1);
                 }
             }
-        });
-    }
+        }
+    });
+}
 
     hexToRgba(hex, alpha) {
         const r = parseInt(hex.slice(1, 3), 16);
