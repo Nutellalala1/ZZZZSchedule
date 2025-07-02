@@ -1,0 +1,32 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #f4f4f9;
+  padding: 2rem;
+  color: #333;
+}
+.container {
+  max-width: 800px;
+  margin: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+th, td {
+  border: 1px solid #ccc;
+  padding: 1rem;
+  text-align: center;
+}
+th {
+  background: #3f51b5;
+  color: white;
+}
+td[contenteditable="true"] {
+  background-color: #fff9c4;
+}
+button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+}
